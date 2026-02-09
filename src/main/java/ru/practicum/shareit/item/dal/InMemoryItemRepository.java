@@ -3,6 +3,7 @@ package ru.practicum.shareit.item.dal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.model.User;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -35,14 +36,14 @@ public class InMemoryItemRepository implements ItemRepository {
     }
 
     @Override
-    public Item saveItem(Item item, long userId) {
-        log.info("Запрос на сохранение предмета {} пользователя id: {}", item, userId);
+    public Item saveItem(Item item, User owner) {
+        log.info("Запрос на сохранение предмета {} пользователя: {}", item, owner);
         item.setId(generateId());
         log.debug("Предмету установлен id: {}", item.getId());
-        item.setOwnerId(userId);
-        log.debug("Предмету присвоен id владельца: {}", item.getOwnerId());
+        item.setOwner(owner);
+        log.debug("Предмету присвоен владелец: {}", item.getOwner());
         items.put(item.getId(), item);
-        final List<Item> userItems = itemsByUserId.computeIfAbsent(item.getOwnerId(), k -> new ArrayList<>());
+        final List<Item> userItems = itemsByUserId.computeIfAbsent(item.getOwner().getId(), k -> new ArrayList<>());
         userItems.add(item);
         return item;
     }

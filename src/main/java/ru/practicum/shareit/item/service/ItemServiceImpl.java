@@ -9,6 +9,9 @@ import ru.practicum.shareit.item.dal.ItemRepository;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.mapper.UserMapper;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.Collections;
@@ -20,8 +23,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
-    private final UserService userService;
     private final ItemMapper itemMapper;
+    private final UserService userService;
+    private final UserMapper userMapper;
 
     @Override
     public ItemDto getItemById(long itemId) {
@@ -54,7 +58,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto saveItem(ItemDto itemDto, long userId) {
         log.info("Запрос на добавление предмета: {} пользователя id: {}", itemDto, userId);
-        userService.getUserById(userId);
+        UserDto ownerDto = userService.getUserById(userId);
         if (itemDto.getAvailable() == null) {
             throw new ValidationException("Статус вещи должен быть указан");
         }
@@ -64,7 +68,7 @@ public class ItemServiceImpl implements ItemService {
         if (itemDto.getDescription().isBlank()) {
             throw new ValidationException("Добавьте описание предмета");
         }
-        Item item = itemRepository.saveItem(itemMapper.itemDtoToItemModel(itemDto), userId);
+        Item item = itemRepository.saveItem(itemMapper.itemDtoToItemModel(itemDto), userMapper.userDtoToUserModel(ownerDto));
         return itemMapper.itemModelToItemDto(item);
     }
 
@@ -77,7 +81,7 @@ public class ItemServiceImpl implements ItemService {
         String name = itemDto.getName();
         String description = itemDto.getDescription();
         Boolean available = itemDto.getAvailable();
-        if (item.getOwnerId() == userId) {
+        if (item.getOwner().getId() == userId) {
             if (name != null && !name.isBlank()) {
                 item.setName(name);
                 log.debug("Предмету установлено имя: {}", name);
